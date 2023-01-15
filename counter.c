@@ -51,22 +51,22 @@ static void render_callback(Canvas* canvas, void* ctx) {
     canvas_set_font(canvas, FontBigNumbers);
 
     char scount[5];
-    uint16_t DynamicWidth = BOXWIDTH;
-    uint16_t DynamicMiddle = MIDDLE_X;
+    uint16_t dynamicBoxWidth = BOXWIDTH;
+    uint16_t dynamicMiddleX = MIDDLE_X;
     if(c->count > 99) {
-        DynamicWidth = BOXWIDTH_BIG;
-        DynamicMiddle = MIDDLE_X_BIG;
+        dynamicBoxWidth = BOXWIDTH_BIG;
+        dynamicMiddleX = MIDDLE_X_BIG;
     }
     if(c->pressed == true || c->boxtimer > 0) {
-        canvas_draw_rframe(canvas, DynamicMiddle, MIDDLE_Y + OFFSET_Y, DynamicWidth, BOXHEIGHT, 5);
+        canvas_draw_rframe(canvas, dynamicMiddleX, MIDDLE_Y + OFFSET_Y, dynamicBoxWidth, BOXHEIGHT, 5);
         canvas_draw_rframe(
-            canvas, DynamicMiddle - 1, MIDDLE_Y + OFFSET_Y - 1, DynamicWidth + 2, BOXHEIGHT + 2, 5);
+            canvas, dynamicMiddleX - 1, MIDDLE_Y + OFFSET_Y - 1, dynamicBoxWidth + 2, BOXHEIGHT + 2, 5);
         canvas_draw_rframe(
-            canvas, DynamicMiddle - 2, MIDDLE_Y + OFFSET_Y - 2, DynamicWidth + 4, BOXHEIGHT + 4, 5);
+            canvas, dynamicMiddleX - 2, MIDDLE_Y + OFFSET_Y - 2, dynamicBoxWidth + 4, BOXHEIGHT + 4, 5);
         c->pressed = false;
         c->boxtimer--;
     } else {
-        canvas_draw_rframe(canvas, DynamicMiddle, MIDDLE_Y + OFFSET_Y, DynamicWidth, BOXHEIGHT, 5);
+        canvas_draw_rframe(canvas, dynamicMiddleX, MIDDLE_Y + OFFSET_Y, dynamicBoxWidth, BOXHEIGHT, 5);
     }
     snprintf(scount, sizeof(scount), "%d", c->count);
     canvas_draw_str_aligned(canvas, 64, 32 + OFFSET_Y, AlignCenter, AlignCenter, scount);
