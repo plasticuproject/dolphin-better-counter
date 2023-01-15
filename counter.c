@@ -111,7 +111,7 @@ int32_t counterapp(void) {
                 c->pressed = true;
                 c->boxtimer = BOXTIME;
                 c->count++;
-            } else if(input.key == InputKeyLeft && c->count < MAX_COUNT) {
+            } else if(input.key == InputKeyLeft && c->count != 0) {
                 c->pressed = true;
                 c->boxtimer = BOXTIME;
                 c->count--;
