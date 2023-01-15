@@ -2,13 +2,16 @@
 #include <gui/gui.h>
 #include <input/input.h>
 #include <stdlib.h>
-#include <counter_icons.h>
+#include <better_counter_icons.h>
 
-#define MAX_COUNT 99
+#define MAX_COUNT 999
 #define BOXTIME 2
 #define BOXWIDTH 30
+#define BOXWIDTH_BIG 42
+#define BOXHEIGHT 30
 #define MIDDLE_X 64 - BOXWIDTH / 2
-#define MIDDLE_Y 32 - BOXWIDTH / 2
+#define MIDDLE_X_BIG 64 - BOXWIDTH_BIG / 2
+#define MIDDLE_Y 32 - BOXHEIGHT / 2
 #define OFFSET_Y 9
 
 typedef struct {
@@ -48,16 +51,22 @@ static void render_callback(Canvas* canvas, void* ctx) {
     canvas_set_font(canvas, FontBigNumbers);
 
     char scount[5];
+    uint16_t DynamicWidth = BOXWIDTH;
+    uint16_t DynamicMiddle = MIDDLE_X;
+    if(c->count > 99) {
+        DynamicWidth = BOXWIDTH_BIG;
+        DynamicMiddle = MIDDLE_X_BIG;
+    }
     if(c->pressed == true || c->boxtimer > 0) {
-        canvas_draw_rframe(canvas, MIDDLE_X, MIDDLE_Y + OFFSET_Y, BOXWIDTH, BOXWIDTH, 5);
+        canvas_draw_rframe(canvas, DynamicMiddle, MIDDLE_Y + OFFSET_Y, DynamicWidth, BOXHEIGHT, 5);
         canvas_draw_rframe(
-            canvas, MIDDLE_X - 1, MIDDLE_Y + OFFSET_Y - 1, BOXWIDTH + 2, BOXWIDTH + 2, 5);
+            canvas, DynamicMiddle - 1, MIDDLE_Y + OFFSET_Y - 1, DynamicWidth + 2, BOXHEIGHT + 2, 5);
         canvas_draw_rframe(
-            canvas, MIDDLE_X - 2, MIDDLE_Y + OFFSET_Y - 2, BOXWIDTH + 4, BOXWIDTH + 4, 5);
+            canvas, DynamicMiddle - 2, MIDDLE_Y + OFFSET_Y - 2, DynamicWidth + 4, BOXHEIGHT + 4, 5);
         c->pressed = false;
         c->boxtimer--;
     } else {
-        canvas_draw_rframe(canvas, MIDDLE_X, MIDDLE_Y + OFFSET_Y, BOXWIDTH, BOXWIDTH, 5);
+        canvas_draw_rframe(canvas, DynamicMiddle, MIDDLE_Y + OFFSET_Y, DynamicWidth, BOXHEIGHT, 5);
     }
     snprintf(scount, sizeof(scount), "%d", c->count);
     canvas_draw_str_aligned(canvas, 64, 32 + OFFSET_Y, AlignCenter, AlignCenter, scount);
@@ -90,7 +99,7 @@ int32_t counterapp(void) {
                 furi_mutex_release(c->mutex);
                 state_free(c);
                 return 0;
-            } else if(input.key == InputKeyUp && c->count < MAX_COUNT) {
+            } else if((input.key == InputKeyUp || InputKeyOk) && c->count < MAX_COUNT) {
                 c->pressed = true;
                 c->boxtimer = BOXTIME;
                 c->count++;
