@@ -14,6 +14,7 @@
 #define MIDDLE_Y 32 - BOXHEIGHT / 2
 #define OFFSET_Y 9
 
+
 typedef struct {
     FuriMessageQueue* input_queue;
     ViewPort* view_port;
@@ -25,6 +26,7 @@ typedef struct {
     int boxtimer;
 } Counter;
 
+
 void state_free(Counter* c) {
     gui_remove_view_port(c->gui, c->view_port);
     furi_record_close(RECORD_GUI);
@@ -34,15 +36,19 @@ void state_free(Counter* c) {
     free(c);
 }
 
+
 static void input_callback(InputEvent* input_event, void* ctx) {
     Counter* c = ctx;
+
     if(input_event->type == InputTypeShort) {
         furi_message_queue_put(c->input_queue, input_event, 0);
     }
 }
 
+
 static void render_callback(Canvas* canvas, void* ctx) {
     Counter* c = ctx;
+
     furi_check(furi_mutex_acquire(c->mutex, FuriWaitForever) == FuriStatusOk);
     canvas_clear(canvas);
     canvas_set_color(canvas, ColorBlack);
@@ -53,10 +59,12 @@ static void render_callback(Canvas* canvas, void* ctx) {
     char scount[5];
     uint16_t dynamicBoxWidth = BOXWIDTH;
     uint16_t dynamicMiddleX = MIDDLE_X;
+
     if(c->count > 99) {
         dynamicBoxWidth = BOXWIDTH_BIG;
         dynamicMiddleX = MIDDLE_X_BIG;
     }
+
     if(c->pressed == true || c->boxtimer > 0) {
         canvas_draw_rframe(canvas, dynamicMiddleX, MIDDLE_Y + OFFSET_Y, dynamicBoxWidth, BOXHEIGHT, 5);
         canvas_draw_rframe(
@@ -68,80 +76,94 @@ static void render_callback(Canvas* canvas, void* ctx) {
     } else {
         canvas_draw_rframe(canvas, dynamicMiddleX, MIDDLE_Y + OFFSET_Y, dynamicBoxWidth, BOXHEIGHT, 5);
     }
+
     snprintf(scount, sizeof(scount), "%d", c->count);
     canvas_draw_str_aligned(canvas, 64, 32 + OFFSET_Y, AlignCenter, AlignCenter, scount);
     furi_mutex_release(c->mutex);
 }
 
+
 Counter* state_init() {
     Counter* c = malloc(sizeof(Counter));
+
     c->input_queue = furi_message_queue_alloc(8, sizeof(InputEvent));
     c->view_port = view_port_alloc();
     c->gui = furi_record_open(RECORD_GUI);
     c->mutex = furi_mutex_alloc(FuriMutexTypeNormal);
     c->count = 0;
     c->boxtimer = 0;
+
     view_port_input_callback_set(c->view_port, input_callback, c);
     view_port_draw_callback_set(c->view_port, render_callback, c);
     gui_add_view_port(c->gui, c->view_port, GuiLayerFullscreen);
+
     return c;
 }
 
 int32_t counterapp(void) {
     Counter* c = state_init();
 
-    while(1) {
-        InputEvent input;
-        while(furi_message_queue_get(c->input_queue, &input, FuriWaitForever) == FuriStatusOk) {
-            furi_check(furi_mutex_acquire(c->mutex, FuriWaitForever) == FuriStatusOk);
+    InputEvent input;
 
-            switch(input.key) {
-                case InputKeyBack:
-                    furi_mutex_release(c->mutex);
-                    state_free(c);
-                    return 0;
-                case InputKeyUp:
-                    if(c->count < MAX_COUNT) {
-                        c->pressed = true;
-                        c->boxtimer = BOXTIME;
-                        c->count++;
-                    }
-                    break;
-                case InputKeyDown:
-                    if(c->count != 0) {
-                        c->pressed = true;
-                        c->boxtimer = BOXTIME;
-                        c->count--;
-                    }
-                    break;
-                case InputKeyRight:
-                    if(c->count < MAX_COUNT) {
-                        c->pressed = true;
-                        c->boxtimer = BOXTIME;
-                        c->count++;
-                    }
-                    break;
-                case InputKeyLeft:
-                    if(c->count != 0) {
-                        c->pressed = true;
-                        c->boxtimer = BOXTIME;
-                        c->count--;
-                    }
-                    break;
-                case InputKeyOk:
-                    if(c->count < MAX_COUNT) {
-                        c->pressed = true;
-                        c->boxtimer = BOXTIME;
-                        c->count++;
-                    }
-                    break;
-                default:
-                    break;
-            }
-            furi_mutex_release(c->mutex);
-            view_port_update(c->view_port);
+    while(furi_message_queue_get(c->input_queue, &input, FuriWaitForever) == FuriStatusOk) {
+        furi_check(furi_mutex_acquire(c->mutex, FuriWaitForever) == FuriStatusOk);
+
+        switch(input.key) {
+
+            case InputKeyBack:
+                furi_mutex_release(c->mutex);
+                state_free(c);
+                return 0;
+
+            case InputKeyUp:
+                if(c->count < MAX_COUNT) {
+                    c->pressed = true;
+                    c->boxtimer = BOXTIME;
+                    c->count++;
+                }
+                break;
+
+            case InputKeyDown:
+                if(c->count != 0) {
+                    c->pressed = true;
+                    c->boxtimer = BOXTIME;
+                    c->count--;
+                }
+                break;
+
+            case InputKeyRight:
+                if(c->count < MAX_COUNT) {
+                    c->pressed = true;
+                    c->boxtimer = BOXTIME;
+                    c->count++;
+                }
+                break;
+
+            case InputKeyLeft:
+                if(c->count != 0) {
+                    c->pressed = true;
+                    c->boxtimer = BOXTIME;
+                    c->count--;
+                }
+                break;
+
+            case InputKeyOk:
+                if(c->count < MAX_COUNT) {
+                    c->pressed = true;
+                    c->boxtimer = BOXTIME;
+                    c->count++;
+                }
+                break;
+
+            default:
+                break;
         }
+
+        furi_mutex_release(c->mutex);
+        view_port_update(c->view_port);
     }
+
     state_free(c);
+
     return 0;
 }
