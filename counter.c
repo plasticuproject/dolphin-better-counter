@@ -95,30 +95,48 @@ int32_t counterapp(void) {
         while(furi_message_queue_get(c->input_queue, &input, FuriWaitForever) == FuriStatusOk) {
             furi_check(furi_mutex_acquire(c->mutex, FuriWaitForever) == FuriStatusOk);
 
-            if(input.key == InputKeyBack) {
-                furi_mutex_release(c->mutex);
-                state_free(c);
-                return 0;
-            } else if(input.key == InputKeyUp && c->count < MAX_COUNT) {
-                c->pressed = true;
-                c->boxtimer = BOXTIME;
-                c->count++;
-            } else if(input.key == InputKeyDown && c->count != 0) {
-                c->pressed = true;
-                c->boxtimer = BOXTIME;
-                c->count--;
-            } else if(input.key == InputKeyRight && c->count < MAX_COUNT) {
-                c->pressed = true;
-                c->boxtimer = BOXTIME;
-                c->count++;
-            } else if(input.key == InputKeyLeft && c->count != 0) {
-                c->pressed = true;
-                c->boxtimer = BOXTIME;
-                c->count--;
-            } else if(input.key == InputKeyOk && c->count < MAX_COUNT) {
-                c->pressed = true;
-                c->boxtimer = BOXTIME;
-                c->count++;
+            switch(input.key) {
+                case InputKeyBack:
+                    furi_mutex_release(c->mutex);
+                    state_free(c);
+                    return 0;
+                case InputKeyUp:
+                    if(c->count < MAX_COUNT) {
+                        c->pressed = true;
+                        c->boxtimer = BOXTIME;
+                        c->count++;
+                    }
+                    break;
+                case InputKeyDown:
+                    if(c->count != 0) {
+                        c->pressed = true;
+                        c->boxtimer = BOXTIME;
+                        c->count--;
+                    }
+                    break;
+                case InputKeyRight:
+                    if(c->count < MAX_COUNT) {
+                        c->pressed = true;
+                        c->boxtimer = BOXTIME;
+                        c->count++;
+                    }
+                    break;
+                case InputKeyLeft:
+                    if(c->count != 0) {
+                        c->pressed = true;
+                        c->boxtimer = BOXTIME;
+                        c->count--;
+                    }
+                    break;
+                case InputKeyOk:
+                    if(c->count < MAX_COUNT) {
+                        c->pressed = true;
+                        c->boxtimer = BOXTIME;
+                        c->count++;
+                    }
+                    break;
+                default:
+                    break;
             }
             furi_mutex_release(c->mutex);
             view_port_update(c->view_port);
