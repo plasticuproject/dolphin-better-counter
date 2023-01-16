@@ -1,5 +1,7 @@
 #include <furi.h>
 #include <gui/gui.h>
+#include <notification/notification.h>
+#include <notification/notification_messages.h>
 #include <input/input.h>
 #include <stdlib.h>
 #include <better_counter_icons.h>
@@ -19,6 +21,7 @@ typedef struct {
     FuriMessageQueue* input_queue;
     ViewPort* view_port;
     Gui* gui;
+    NotificationApp* notification;
     FuriMutex** mutex;
 
     int count;
@@ -27,9 +30,28 @@ typedef struct {
 } Counter;
 
 
+const NotificationSequence sequence_count = {
+
+    // Beep
+    //&message_note_c7,
+    //&message_delay_50,
+    //&message_sound_off,
+
+    // Vibrate
+    &message_vibro_on,
+    &message_delay_10,
+    &message_delay_10,
+    &message_vibro_off,
+
+    NULL,
+};
+
+
 void state_free(Counter* c) {
+    notification_message_block(c->notification, &sequence_display_backlight_enforce_auto);
     gui_remove_view_port(c->gui, c->view_port);
     furi_record_close(RECORD_GUI);
+    furi_record_close(RECORD_NOTIFICATION);
     view_port_free(c->view_port);
     furi_message_queue_free(c->input_queue);
     furi_mutex_free(c->mutex);
@@ -90,6 +112,8 @@ Counter* state_init() {
     c->view_port = view_port_alloc();
     c->gui = furi_record_open(RECORD_GUI);
     c->mutex = furi_mutex_alloc(FuriMutexTypeNormal);
+    c->notification = furi_record_open(RECORD_NOTIFICATION);
+
     c->count = 0;
     c->boxtimer = 0;
 
@@ -107,14 +131,13 @@ int32_t counterapp(void) {
 
     while(furi_message_queue_get(c->input_queue, &input, FuriWaitForever) == FuriStatusOk) {
         furi_check(furi_mutex_acquire(c->mutex, FuriWaitForever) == FuriStatusOk);
+        notification_message(c->notification, &sequence_count);
 
         switch(input.key) {
-
             case InputKeyBack:
                 furi_mutex_release(c->mutex);
                 state_free(c);
                 return 0;
-
             case InputKeyUp:
                 if(c->count < MAX_COUNT) {
                     c->pressed = true;
@@ -122,7 +145,6 @@ int32_t counterapp(void) {
                     c->count++;
                 }
                 break;
-
             case InputKeyDown:
                 if(c->count != 0) {
                     c->pressed = true;
@@ -130,7 +152,6 @@ int32_t counterapp(void) {
                     c->count--;
                 }
                 break;
-
             case InputKeyRight:
                 if(c->count < MAX_COUNT) {
                     c->pressed = true;
@@ -138,7 +159,6 @@ int32_t counterapp(void) {
                     c->count++;
                 }
                 break;
-
             case InputKeyLeft:
                 if(c->count != 0) {
                     c->pressed = true;
@@ -146,7 +166,6 @@ int32_t counterapp(void) {
                     c->count--;
                 }
                 break;
-
             case InputKeyOk:
                 if(c->count < MAX_COUNT) {
                     c->pressed = true;
@@ -154,7 +173,6 @@ int32_t counterapp(void) {
                     c->count++;
                 }
                 break;
-
             default:
                 break;
         }
